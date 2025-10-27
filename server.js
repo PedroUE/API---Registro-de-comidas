@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import comidaRoute from "./src/routes/bruxoRoute.js"
+import comidaRoute from "./src/routes/comidaRoute.js"
 
 const app = express();
 app.use(express.json());
