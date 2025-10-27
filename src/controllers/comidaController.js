@@ -26,7 +26,6 @@ export const getAllComidas = async (req, res) => {
     }
 };
 
-
 export const getComidaById = async (req, res) => {
     try {
         const { id } = req.params;
