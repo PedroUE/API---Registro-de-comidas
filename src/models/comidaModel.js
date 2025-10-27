@@ -14,11 +14,13 @@ export const getComidaById = async (id) => {
     });
 };
 
-export const criar = async (dados) => {
+export const create = async (dados) => {
     return await prisma.comida.create({
         data: {
-            nome: dados.noem,
+            nome: dados.nome,
             tipo: dados.tipo,
+            preco: dados.preco,
+            descricao: dados.descricao
         }
     });
 };
@@ -29,12 +31,14 @@ export const deletar = async (id) => {
     });
 };
 
- export const atualizar = async (id, dado) => {
-    return await prisma.bruxo.update({
+export const atualizar = async (id, dado) => {
+    return await prisma.comida.update({
         where: { id: Number(id)},
         data: {
             ...(dado.nome && { nome: dado.nome}),
             ...(dado.tipo && { tipo: dado.tipo }),
+            ...(dado.preco !== undefined && { preco: dado.preco }),
+            ...(dado.descricao && { descricao: dado.descricao }),
         }
     });
 };

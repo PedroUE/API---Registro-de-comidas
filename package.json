@@ -3,10 +3,15 @@
   "version": "1.0.0",
   "main": "server.js",
   "type": "module",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
-    "studio": "npx prisma studio"
+    "studio": "npx prisma studio",
+    "migrate:dev": "dotenv -e .env -- prisma migrate dev",
+    "seed": "node prisma/seed.js"
   },
   "keywords": [],
   "author": "Pedro Urbano",
@@ -18,5 +23,8 @@
     "express": "^5.1.0",
     "nodemon": "^3.1.10",
     "prisma": "^6.18.0"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^10.0.0"
   }
 }

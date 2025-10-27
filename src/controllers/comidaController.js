@@ -1,15 +1,18 @@
+
 import * as comidaModel from '../models/comidaModel.js';
+
+const TIPOS_VALIDOS = ['Principal', 'Sobremesa', 'Bebida', 'Aperitivo', 'Vegano'];
 
 export const getAllComidas = async (req, res) => {
     try {
         const comidas = await comidaModel.getAllComidas();
 
-        if (!bruxos || comidas.length === 0) {
-            return res.status(404).json({ 
+        if (!comidas || comidas.length === 0) {
+            return res.status(404).json({
                 total: 0,
-                message: 'nenhuma comida foi encontrada'});
+                message: 'nenhuma comida foi encontrada'
+            });
         }
-
 
         return res.status(200).json({
             total: comidas.length,
@@ -18,22 +21,26 @@ export const getAllComidas = async (req, res) => {
         });
 
     } catch (error) {
-
-        return res.status(500).json({ 
-            message: 'erro ao buscar comidas', 
-            error: error.message 
+        return res.status(500).json({
+            message: 'erro ao buscar comidas',
+            error: error.message
         });
     }
 };
 
 export const getComidaById = async (req, res) => {
     try {
-        const { id } = req.params;
+        const id = parseInt(req.params.id);
+
+        if (isNaN(id)) {
+            return res.status(400).json({ message: 'ID inválido. Deve ser um número inteiro.' });
+        }
+
         const comida = await comidaModel.getComidaById(id);
 
         if (!comida) {
-            return res.status(404).json({ 
-                message: 'comida não encontrada' 
+            return res.status(404).json({
+                message: 'comida não encontrada'
             });
         }
 
@@ -43,71 +50,78 @@ export const getComidaById = async (req, res) => {
         });
 
     } catch (error) {
-
-        return res.status(500).json({ 
-            message: 'erro ao buscar comida', 
-            error: error.message 
+        return res.status(500).json({
+            message: 'erro ao buscar comida',
+            error: error.message
         });
     }
 };
 
 export const criar = async (req, res) => {
-  try {
-    const {  } = req.body;
+    try {
+        const { nome, tipo, preco, descricao } = req.body;
 
-    if (!nome || !tipo) {
-      return res.status(400).json({ 
-        erro: 'comando mal executado - campos obrigatórios faltando',
-        camposObrigatorios: ['nome', 'tipo']
-      });
-    }
-    
- 
-    const tiposValidos= ['salgado', 'doce'];
-    if (!tiposValidos.includes(tipo)) {
-      return res.status(400).json({
-        erro: 'tipo inválido! adicione um tipo valido!',
-        tiposValidos
-      });
-    }
-    
-    const novaComida = await comidaModel.create(req.body);
-    
-    res.status(201).json({
-      mensagem: `🎓 ${nome} foi criada com sucesso!`,
-      comida: novaComida
-    });
+        if (!nome || !tipo || preco === undefined || !descricao) {
+            return res.status(400).json({
+                erro: 'comando mal executado - campos obrigatórios faltando ou nulos',
+                camposObrigatorios: ['nome', 'tipo', 'preco', 'descricao']
+            });
+        }
+        
+        if (typeof preco !== 'number' || isNaN(preco) || preco <= 0) {
+             return res.status(400).json({
+                erro: 'O preço (preco) deve ser um número positivo.'
+            });
+        }
 
-  } catch (error) {
-    res.status(500).json({ 
-      erro: 'Erro ao criar nova comida',
-      detalhes: error.message 
-    });
-  }
+        if (!TIPOS_VALIDOS.includes(tipo)) {
+            return res.status(400).json({
+                erro: 'tipo inválido! adicione um tipo valido!',
+                tiposValidos: TIPOS_VALIDOS.join(', ')
+            });
+        }
+        
+        const novaComida = await comidaModel.create(req.body);
+        
+        res.status(201).json({
+            mensagem: `🎓 ${nome} foi criada com sucesso!`,
+            comida: novaComida
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            erro: 'Erro ao criar nova comida',
+            detalhes: error.message
+        });
+    }
 };
 
-export const deletar = async (req,res) => {
+export const deletar = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
 
-        const comidaExiste = await comidaModel.encontreUM(id);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: 'ID inválido. Deve ser um número inteiro.' });
+        }
+        
+        const comidaExiste = await comidaModel.getComidaById(id);
 
-        if(!comidaExiste) {
+        if (!comidaExiste) {
             return res.status(404).json({
                 error: 'Comida não encontrada com esse id',
                 id: id
-            })
+            });
         }
 
         await comidaModel.deletar(id);
 
         res.status(200).json({
             mensagem: 'Comida deletada com sucesso!',
-            comidaRemovida : comidaExiste
-        })
+            comidaRemovida: comidaExiste
+        });
     } catch (error) {
-        req.status(500).json({
-            error: 'Error ao apagar a comida!',
+        res.status(500).json({
+            error: 'Erro ao apagar a comida!',
             detalhes: error.message
         });
     }
@@ -118,32 +132,44 @@ export const atualizar = async (req, res) => {
         const id = parseInt(req.params.id);
         const dados = req.body;
 
-        const comidaExiste = await comidaModel.encontreUM(id);
+        if (isNaN(id)) {
+            return res.status(400).json({ erro: 'ID inválido. Deve ser um número inteiro.' });
+        }
+        
+        const comidaExiste = await comidaModel.getComidaById(id);
 
-        if(!comidaExiste) {
+        if (!comidaExiste) {
             return res.status(404).json({
                 erro: 'Comida não existe',
                 id: id
-            })
+            });
         }
-        if(dados.tipo) {
-         const tiposValidos= ['salgado', 'doce'];
-    if (!tiposValidos.includes(tipo)) {
-      return res.status(400).json({
-        erro: 'tipo inválido! adicione um tipo valido!',
-        tiposValidos
-      });
-    }
-} 
+
+        if (dados.tipo) {
+            if (!TIPOS_VALIDOS.includes(dados.tipo)) {
+                return res.status(400).json({
+                    erro: 'tipo inválido! adicione um tipo valido!',
+                    tiposValidos: TIPOS_VALIDOS.join(', ')
+                });
+            }
+        } 
+        
+        if (dados.preco !== undefined) {
+             if (typeof dados.preco !== 'number' || isNaN(dados.preco) || dados.preco <= 0) {
+                 return res.status(400).json({
+                    erro: 'O preço (preco) deve ser um número positivo.'
+                });
+            }
+        }
 
         const comidaAtualizada = await comidaModel.atualizar(id, dados)
 
         res.status(200).json({
-            mesagem: 'comida atualizada com sucesso!',
+            mensagem: 'comida atualizada com sucesso!',
             comida: comidaAtualizada
-        })
+        });
     } catch (error) {
-        req.status(500).json({
+        res.status(500).json({
             erro: 'Erro ao atualizar a comida',
             detalhes: error.message
         });
